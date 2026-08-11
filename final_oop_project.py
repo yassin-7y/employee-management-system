@@ -37,13 +37,13 @@ class Engineer(Employee):
         self.__salary = salary
 
     def display(self):
-        info = super().show_info()
+        info = self.show_info()
         return f"{info}\nDepartment: {self.department}\nName: {self.__name}\nID: {self.__id}\nSalary: {self.__salary}"
 
 
 class ML_engineer(Engineer):
     def __init__(self, company, loc_company, base_salary, department, name, id, salary, programming_language, no_models):
-        super().__init__(company, loc_company, base_salary, department, name, id, salary)
+        Engineer.__init__(self, company, loc_company, base_salary, department, name, id, salary)
         self.programming_language = programming_language
         self.no_models = no_models
         self.cloud_platforms = []
@@ -52,13 +52,13 @@ class ML_engineer(Engineer):
         self.cloud_platforms.extend(args)
 
     def display(self):
-        info = super().display()
+        info = Engineer.display(self)
         return f"{info}\nNo. of Models: {self.no_models}\nProg. Language: {self.programming_language}\nCloud Platforms: {', '.join(self.cloud_platforms)}"
 
 
 class DL(Engineer):
     def __init__(self, company, loc_company, base_salary, department, name, id, salary, gpu_architecture):
-        super().__init__(company, loc_company, base_salary, department, name, id, salary)
+        Engineer.__init__(self, company, loc_company, base_salary, department, name, id, salary)
         self.gpu_architecture = gpu_architecture
         self.distributed_training_tools = []
         self.experiment_trackers = []
@@ -70,7 +70,7 @@ class DL(Engineer):
         self.experiment_trackers.extend(args)
 
     def display(self):
-        info = super().display()
+        info = Engineer.display(self)
         return f"{info}\nGPU Arch: {self.gpu_architecture}\nDist. Tools: {', '.join(self.distributed_training_tools)}\nTrackers: {', '.join(self.experiment_trackers)}"
 
 
@@ -80,10 +80,9 @@ class AI_Engineer(ML_engineer, DL):
         DL.__init__(self, company, loc_company, base_salary, department, name, id, salary, gpu_architecture)
 
     def display(self):
-        info = ML_engineer.display(self)
-        return f"{info}\nGPU Arch: {self.gpu_architecture}\nDist. Tools: {', '.join(self.distributed_training_tools)}\nTrackers: {', '.join(self.experiment_trackers)}"
-
-
+        ml_info = ML_engineer.display(self)
+        dl_info = f"GPU Arch: {self.gpu_architecture}\nDist. Tools: {', '.join(self.distributed_training_tools)}\nTrackers: {', '.join(self.experiment_trackers)}"
+        return f"{ml_info}\n{dl_info}"
 
 
 def for_gui():
@@ -198,27 +197,30 @@ def delete():
         messagebox.showerror("Error", "Please enter a valid number!")
 
 
-
-
 root = Tk()
 root.title("Employees Management System")
-root.geometry("600x650")
+root.geometry("800x780")
 root.configure(bg="#f4f4f9")
 
 style = ttk.Style()
 style.theme_use("clam")
 style.configure("TNotebook", background="#f4f4f9")
-style.configure("TNotebook.Tab", font=("Arial", 10, "bold"), padding=[10, 5])
-style.configure("TLabel", font=("Arial", 9))
-style.configure("TButton", font=("Arial", 10, "bold"))
+style.configure("TNotebook.Tab", font=("Arial", 11, "bold"), padding=[12, 8])
+style.configure("TLabel", font=("Arial", 11))
+style.configure("TButton", font=("Arial", 11, "bold"))
 
 
 notebook = ttk.Notebook(root)
-notebook.pack(expand=1, fill="both", padx=10, pady=10)
+notebook.pack(expand=1, fill="both", padx=15, pady=15)
 
+
+# --------------------------
 
 tab1 = ttk.Frame(notebook)
 notebook.add(tab1, text="Add Employee")
+
+add_center_frame = ttk.Frame(tab1)
+add_center_frame.place(relx=0.5, rely=0.5, anchor=CENTER)
 
 fields = [
     ("Company Name:", "company_input"),
@@ -236,16 +238,16 @@ fields = [
     ("Experiment Trackers (DL):", "experiment_trackers_input"),
 ]
 
-ttk.Label(tab1, text="Specialization:").grid(row=0, column=0, sticky=W, padx=10, pady=5)
-specialization_combo = ttk.Combobox(tab1, values=["ML", "DL", "AI"], state="readonly", width=27)
-specialization_combo.grid(row=0, column=1, padx=10, pady=5)
+ttk.Label(add_center_frame, text="Specialization:").grid(row=0, column=0, sticky=W, padx=12, pady=5)
+specialization_combo = ttk.Combobox(add_center_frame, values=["ML", "DL", "AI"], state="readonly", width=33, font=("Arial", 11))
+specialization_combo.grid(row=0, column=1, padx=12, pady=5)
 specialization_combo.current(0)
 
 entries = {}
 for idx, (label_text, var_name) in enumerate(fields, start=1):
-    ttk.Label(tab1, text=label_text).grid(row=idx, column=0, sticky=W, padx=10, pady=3)
-    entry = ttk.Entry(tab1, width=30)
-    entry.grid(row=idx, column=1, padx=10, pady=3)
+    ttk.Label(add_center_frame, text=label_text).grid(row=idx, column=0, sticky=W, padx=12, pady=4)
+    entry = ttk.Entry(add_center_frame, width=35, font=("Arial", 11))
+    entry.grid(row=idx, column=1, padx=12, pady=4)
     entries[var_name] = entry
 
 company_input = entries["company_input"]
@@ -262,51 +264,63 @@ gpu_architecture_input = entries["gpu_architecture_input"]
 distributed_training_tools_input = entries["distributed_training_tools_input"]
 experiment_trackers_input = entries["experiment_trackers_input"]
 
-btn_add = ttk.Button(tab1, text="Add Employee", command=for_gui)
-btn_add.grid(row=14, column=0, columnspan=2, pady=15)
-#---------------------
+btn_add = ttk.Button(add_center_frame, text="Add Employee", command=for_gui)
+btn_add.grid(row=14, column=0, columnspan=2, pady=18)
+
+
+# ---------------------------
 
 tab2 = ttk.Frame(notebook)
 notebook.add(tab2, text="Display Info")
 
-ttk.Label(tab2, text="Enter Employee Index (1, 2, ...):").pack(anchor=W, padx=15, pady=10)
-employee_no_input = ttk.Entry(tab2, width=30)
-employee_no_input.pack(anchor=W, padx=15, pady=5)
+ttk.Label(tab2, text="Enter Employee Index (1, 2, ...):").pack(anchor=W, padx=20, pady=15)
+employee_no_input = ttk.Entry(tab2, width=35, font=("Arial", 11))
+employee_no_input.pack(anchor=W, padx=20, pady=5)
 
 btn_show = ttk.Button(tab2, text="Show Details", command=show)
-btn_show.pack(anchor=W, padx=15, pady=10)
+btn_show.pack(anchor=W, padx=20, pady=12)
 
-display_text = Text(tab2, width=65, height=18, font=("Consolas", 10), state=DISABLED)
-display_text.pack(padx=15, pady=10)
+display_text = Text(tab2, width=70, height=20, font=("Consolas", 11), state=DISABLED)
+display_text.pack(padx=20, pady=15)
 
-#----------------------
+
+# -------------------------
+
 tab3 = ttk.Frame(notebook)
 notebook.add(tab3, text="Update Employee")
 
-ttk.Label(tab3, text="Employee Number:").grid(row=0, column=0, sticky=W, padx=10, pady=10)
-emp_no_input = ttk.Entry(tab3, width=30)
-emp_no_input.grid(row=0, column=1, padx=10, pady=10)
+update_center_frame = ttk.Frame(tab3)
+update_center_frame.place(relx=0.5, rely=0.4, anchor=CENTER)
 
-ttk.Label(tab3, text="Field Name (e.g. name, salary, gpu_architecture):").grid(row=1, column=0, sticky=W, padx=10, pady=10)
-emP_var_input = ttk.Entry(tab3, width=30)
-emP_var_input.grid(row=1, column=1, padx=10, pady=10)
+ttk.Label(update_center_frame, text="Employee Number:").grid(row=0, column=0, sticky=W, padx=12, pady=12)
+emp_no_input = ttk.Entry(update_center_frame, width=35, font=("Arial", 11))
+emp_no_input.grid(row=0, column=1, padx=12, pady=12)
 
-ttk.Label(tab3, text="New Value:").grid(row=2, column=0, sticky=W, padx=10, pady=10)
-new_value_input = ttk.Entry(tab3, width=30)
-new_value_input.grid(row=2, column=1, padx=10, pady=10)
+ttk.Label(update_center_frame, text="Field Name (e.g. name, salary, gpu_architecture):").grid(row=1, column=0, sticky=W, padx=12, pady=12)
+emP_var_input = ttk.Entry(update_center_frame, width=35, font=("Arial", 11))
+emP_var_input.grid(row=1, column=1, padx=12, pady=12)
 
-btn_update = ttk.Button(tab3, text="Update Data", command=update)
-btn_update.grid(row=3, column=0, columnspan=2, pady=15)
+ttk.Label(update_center_frame, text="New Value:").grid(row=2, column=0, sticky=W, padx=12, pady=12)
+new_value_input = ttk.Entry(update_center_frame, width=35, font=("Arial", 11))
+new_value_input.grid(row=2, column=1, padx=12, pady=12)
 
-# -------------------
+btn_update = ttk.Button(update_center_frame, text="Update Data", command=update)
+btn_update.grid(row=3, column=0, columnspan=2, pady=22)
+
+
+# ------------------------
+
 tab4 = ttk.Frame(notebook)
 notebook.add(tab4, text="Delete Employee")
 
-ttk.Label(tab4, text="Employee Number to Delete:").pack(anchor=W, padx=15, pady=10)
-no_emp_del_input = ttk.Entry(tab4, width=30)
-no_emp_del_input.pack(anchor=W, padx=15, pady=5)
+delete_center_frame = ttk.Frame(tab4)
+delete_center_frame.place(relx=0.5, rely=0.4, anchor=CENTER)
 
-btn_del = ttk.Button(tab4, text="Delete Employee", command=delete)
-btn_del.pack(anchor=W, padx=15, pady=15)
+ttk.Label(delete_center_frame, text="Employee Number to Delete:").pack(padx=20, pady=15)
+no_emp_del_input = ttk.Entry(delete_center_frame, width=35, font=("Arial", 11))
+no_emp_del_input.pack(padx=20, pady=8)
+
+btn_del = ttk.Button(delete_center_frame, text="Delete Employee", command=delete)
+btn_del.pack(padx=20, pady=20)
 
 root.mainloop()
